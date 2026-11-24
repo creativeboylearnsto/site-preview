@@ -149,6 +149,11 @@
     background: transparent; border: 0; padding: 0.1rem 0; width: 100%; min-height: 44px; appearance: none; -webkit-appearance: none;
   }
   .plan input:focus, .plan select:focus { outline: none; }
+  /* month field: iOS Safari centres date values and Android Chrome pads them; pin the value to the left edge like the other fields */
+  .plan input[type=month] { text-align: left; display: block; }
+  .plan input[type=month]::-webkit-date-and-time-value { text-align: left; margin: 0; }
+  .plan input[type=month]::-webkit-datetime-edit, .plan input[type=month]::-webkit-datetime-edit-fields-wrapper { padding: 0; margin: 0; }
+  .plan input[type=month]::-webkit-datetime-edit-month-field, .plan input[type=month]::-webkit-datetime-edit-year-field { padding-left: 0; padding-right: 0; }
   .plan label:focus-within { outline: 2px solid var(--olive); outline-offset: 1px; }
   .plan .pill { justify-content: center; min-height: 44px; border-radius: 10px; margin-top: 0.2rem; }
   .plan small { font-size: 12.5px; color: var(--soft); text-align: center; }
@@ -354,7 +359,7 @@
   }
   /* phones: the copy runs full width over bright water, so the shade sits under the text block, not the whole frame */
   @media (max-width: 760px) {
-    .hero__shade { background: linear-gradient(180deg, rgba(14, 22, 16, 0.45) 0%, transparent 20%, transparent 36%, rgba(14, 22, 16, 0.5) 52%, rgba(14, 22, 16, 0.72) 100%); }
+    .hero__shade { background: linear-gradient(180deg, rgba(0, 0, 0, 0.45) 0%, transparent 18%, transparent 26%, rgba(0, 0, 0, 0.55) 42%, rgba(0, 0, 0, 0.78) 70%, rgba(0, 0, 0, 0.85) 100%); }
   }
   .skip { position: fixed; left: 1rem; top: -60px; z-index: 1000; padding: 0.8rem 1.2rem; background: #3D322C; color: #F4F1E8; font: 500 14px/1 Jost, system-ui, sans-serif; text-decoration: none; }
   .skip:focus { top: 1rem; }
