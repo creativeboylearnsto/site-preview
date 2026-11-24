@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noimageindex">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Cottages · Camotes Village</title>
+<meta name="description" content="Six private cottages at Camotes Village, each with its own bathroom, kitchen, air-con, TV and reliable Starlink internet.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='16' fill='%234E5B3B'/><circle cx='16' cy='18' r='6' fill='%23E8E3D9'/></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="scrollcraft.css">
+<link rel="stylesheet" href="site.css">
+<link rel="stylesheet" href="bar.css">
+<link rel="stylesheet" href="photo-focus.css">
+<style>
+  /* the village map */
+  .vmap__head { margin-bottom: clamp(1.5rem, 3vw, 2.5rem); }
+  .vmap__board { display: grid; grid-template-columns: 1fr 17.5rem; gap: clamp(1rem, 2.5vw, 2rem); align-items: start; }
+  .vmap__map { border-radius: var(--r-xl); overflow: hidden; background: #E2E8D2; }
+  .vmap__map svg { display: block; width: 100%; height: auto; }
+  .vmap__pin circle { transition: transform 240ms var(--sc-ease-out); transform-box: fill-box; transform-origin: center; }
+  .vmap__pin.is-on circle, a.vmap__pin:hover circle, a.vmap__pin:focus-visible circle { transform: scale(1.25); }
+  a.vmap__pin:focus-visible { outline: none; }
+  .vmap__map [id^="b-"] { transition: filter 240ms var(--sc-ease-out); }
+  .vmap__map .is-lit { filter: brightness(1.18) saturate(1.15); }
+  .vmap__side { background: var(--sc-surface); border-radius: var(--r-lg); padding: 0.6rem 0.9rem; }
+  .vmap__key { list-style: none; padding: 0; margin: 0; }
+  .vmap__key li + li { border-top: 1px solid var(--sc-hairline); }
+  .vmap__key li.is-other:first-of-type, .vmap__key li:not(.is-other) + li.is-other { border-top: 1px solid var(--sc-hairline-strong); }
+  .vmap__key a, .vmap__key div { display: grid; grid-template-columns: 30px 1fr; gap: 0.75rem; align-items: center; padding: 0.6rem 0.3rem; text-decoration: none; border-radius: 0; }
+  .vmap__key a:hover, .vmap__key li.is-on > * { background: rgba(78, 91, 59, 0.08); }
+  .vmap__n { width: 28px; height: 28px; border-radius: 50%; background: var(--olive); color: #F4F1E8; display: grid; place-items: center; font-weight: 500; font-size: 13px; }
+  .is-other .vmap__n { background: #7E7C70; }
+  .vmap__key b { display: block; font-weight: 400; font-size: 15px; line-height: 1.25; }
+  .vmap__key small { display: block; font-size: 12.5px; color: var(--sc-ink-soft); }
+  .c { scroll-margin-top: 110px; }
+  @media (max-width: 960px) {
+    .vmap__board { grid-template-columns: 1fr; }
+    .vmap__key { display: grid; grid-template-columns: 1fr 1fr; column-gap: 1rem; }
+    .vmap__key li + li, .vmap__key li.is-other:first-of-type, .vmap__key li:not(.is-other) + li.is-other { border-top: 0; }
+  }
+  @media (max-width: 420px) { .vmap__key { grid-template-columns: 1fr; } }
+  /* on small screens the map shrinks a lot; grow the markers so they stay readable */
+  .vmap__pin { transform-box: fill-box; transform-origin: center; }
+  @media (max-width: 700px) { .vmap__pin { transform: scale(2.1); } }
+  .vmap__n--sign { background: #8B6A4E !important; font-size: 15px; }
+  .vmap__sign { transform-box: fill-box; transform-origin: 0% 50%; }
+  @media (max-width: 700px) { .vmap__sign { transform: scale(1.7); } }
+  .list { display: grid; gap: clamp(4rem, 9vw, 8rem); }
+  .c { display: grid; grid-template-columns: 1.3fr 1fr; gap: clamp(2rem, 5vw, 5rem); align-items: end; }
+  .c:nth-child(even) { grid-template-columns: 1fr 1.3fr; }
+  .c:nth-child(even) .c__media { order: 2; }
+  /* every cottage's photos share one height, so the rows line up */
+  .c { --ch: clamp(260px, 28vw, 420px); }
+  .c__media { display: flex; gap: var(--sc-4); height: var(--ch); }
+  .c__media > * { height: 100%; min-width: 0; }
+  .c__main { flex: 1 1 0; }
+  .c__second { flex: 1 1 0; }
+  .c__main:has(+ .c__second) { flex-grow: 1.7; }
+  .c__main--tall { flex: 0 0 auto; aspect-ratio: 4 / 5; }
+  .c:nth-child(even) .c__media { justify-content: flex-end; }
+  .c h2 { margin: 0 0 var(--sc-5); }
+  .c dl { margin: 0; display: grid; grid-template-columns: 6.5rem 1fr; }
+  .c dt, .c dd { padding: 0.75rem 0; border-top: 1px solid var(--sc-hairline); margin: 0; }
+  .c dt { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sc-ink-soft); padding-top: 0.95rem; }
+  .statement { font: 300 var(--sc-t-2xl)/1.15 var(--sc-font-display); margin: 0; max-width: 22ch; }
+  @media (max-width: 860px) {
+    .c { --ch: 62vw; }
+    .c__second { flex: 0 0 40%; aspect-ratio: auto; }
+    .c__main--tall { flex: 1 1 0; aspect-ratio: auto; }
+    .c, .c:nth-child(even) { grid-template-columns: 1fr; }
+    .c:nth-child(even) .c__media { order: 0; }
+  }
+  /* a cottage with a full set of photos: a dark band with a mosaic gallery */
+  .c--flow { display: block; text-align: center; background: var(--forest); color: var(--ivory);
+    --sc-ink: var(--ivory); --sc-ink-soft: #CFC6B2; --sc-hairline: rgba(234, 227, 210, 0.16);
+    box-shadow: 0 0 0 100vmax var(--forest); clip-path: inset(0 -100vmax);
+    padding-block: clamp(4rem, 8vw, 6.5rem); }
+  /* first in the list: the band starts flush with the top of the section */
+  .c--flow:first-child { margin-top: calc(-1 * clamp(4.5rem, 9vw, 8rem)); }
+  /* last in the list: the band runs into the dark section below */
+  .c--flow:last-child { margin-bottom: calc(-1 * clamp(4.5rem, 9vw, 8rem)); }
+  /* two dark bands in a row: close the beige gap and divide them with a fine brass line */
+  .c--flow + .c--flow { margin-top: calc(-1 * clamp(4rem, 9vw, 8rem)); }
+  .c--flow + .c--flow::before { content: ""; position: absolute; top: 0; left: 50%; width: min(1180px, 100%); height: 1px;
+    transform: translateX(-50%); background: linear-gradient(90deg, transparent, rgba(183, 154, 98, 0.45) 20%, rgba(183, 154, 98, 0.45) 80%, transparent); }
+  .c--flow { position: relative; }
+  /* Gray House: the logo in sand stands in for photos */
+  .gray-mark { max-width: 1180px; margin: clamp(1.75rem, 3vw, 2.5rem) auto 0; height: clamp(300px, 30vw, 420px); display: grid; place-items: center; align-content: center; gap: 1.2rem;
+    border: 1px solid rgba(234, 227, 210, 0.14); background: rgba(255, 255, 255, 0.025); color: #E6D9C3; }
+  .gray-mark svg { width: clamp(150px, 16vw, 220px); height: auto; display: block; }
+  .gray-mark figcaption { font: 500 11px/1 var(--sc-font-body, "Jost", sans-serif); letter-spacing: 0.24em; text-transform: uppercase; color: #CFC6B2; }
+  @media (max-width: 760px) { .gray-mark { height: 260px; } }
+  /* a short scene under each cottage name, one moment per line */
+  .scene { margin: 0 0 var(--sc-5); font: 300 clamp(1.15rem, 1.5vw, 1.35rem)/1.4 var(--sc-font-display); }
+  .scene span { display: block; }
+  .scene span + span { margin-top: 0.55rem; }
+  .c--flow .scene { margin: 0 auto 1rem; max-width: 34rem; }
+  .c dd a, .flow__facts dd a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+  .c--flow .label { color: var(--linen); justify-content: center; }
+  .c--flow .label::after { content: ""; flex: none; width: 44px; height: 1px; background: var(--brass); }
+  .c--flow .label::before { background: var(--brass); }
+  .c--flow h2 { margin: 1.1rem 0 0.9rem; }
+  .c--flow h2 em { color: var(--tan); }
+  .flow__hint { margin: 0; font-size: 0.9rem; letter-spacing: 0.04em; color: var(--sc-ink-soft); }
+  /* the gallery: every photo visible at once, in rows of mixed widths (3 · 5 · 4, then 5 · 4 · 3) */
+  .flow__row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 14px; max-width: 1180px; margin: clamp(1.75rem, 3vw, 2.5rem) auto 0; }
+  .flow__card { position: relative; height: clamp(220px, 21vw, 300px); padding: 0; border: 0; border-radius: 0;
+    overflow: hidden; background: var(--espresso); cursor: zoom-in; box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.55); }
+  .flow__card:nth-child(6n+1) { grid-column: span 3; }
+  .flow__card:nth-child(6n+2) { grid-column: span 5; }
+  .flow__card:nth-child(6n+3) { grid-column: span 4; }
+  .flow__card:nth-child(6n+4) { grid-column: span 5; }
+  .flow__card:nth-child(6n+5) { grid-column: span 4; }
+  .flow__card:nth-child(6n)   { grid-column: span 3; }
+  /* a lone photo after full rows closes the gallery across the whole width */
+  @media (min-width: 761px) { .flow__card:last-child:nth-child(3n+1) { grid-column: 1 / -1; height: clamp(260px, 30vw, 420px); } }
+  /* a last row of two splits the width evenly */
+  @media (min-width: 761px) { .flow__card:nth-last-child(2):nth-child(3n+1), .flow__card:last-child:nth-child(3n+2) { grid-column: span 6; } }
+  .flow__card img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; object-position: var(--pos, 50% 50%);
+    transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .flow__card:hover img { transform: scale(1.03); }
+  .flow__card::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(0deg, rgba(40, 30, 22, 0.82), rgba(40, 30, 22, 0.25) 38%, transparent 60%); }
+  .flow__cap { position: absolute; z-index: 1; left: 18px; bottom: 16px; right: 18px; text-align: left;
+    font: 400 15px/1.25 var(--sc-font-text); letter-spacing: 0.04em; color: var(--ivory); text-shadow: 0 1px 8px rgba(0, 0, 0, 0.4); }
+  .flow__card:focus-visible { outline: 2px solid var(--tan); outline-offset: 3px; }
+  .c--flow .flow__facts { max-width: 760px; margin: 2rem auto 0; display: grid; grid-template-columns: 7.5rem 1fr; text-align: left; }
+  .flow__facts dt, .flow__facts dd { padding: 0.75rem 0; border-top: 1px solid var(--sc-hairline); margin: 0; }
+  .flow__facts dt { font-size: 0.7rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--sc-ink-soft); padding-top: 0.95rem; }
+  @media (max-width: 760px) {
+    .flow__row { grid-template-columns: 1fr 1fr; gap: 8px; }
+    .flow__card, .flow__card:nth-child(n) { grid-column: span 1; height: 150px; }
+    /* the lead photo, and an odd one out at the end, run full width */
+    .flow__card:first-child, .flow__card:last-child:nth-child(even) { grid-column: 1 / -1; height: 220px; }
+    .flow__cap { font-size: 12.5px; left: 10px; bottom: 9px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .flow__card img { transition: none; } }
+  /* the viewer: one photo large, with arrows */
+  .lb { position: fixed; inset: 0; z-index: 200; display: grid; grid-template-rows: 1fr auto; padding: 56px 64px 24px;
+    background: rgba(20, 22, 17, 0.985); color: var(--ivory); }
+  .lb[hidden] { display: none; }
+  .lb img { width: 100%; height: 100%; min-height: 0; object-fit: contain; }
+  .lb__cap { margin: 14px 0 0; text-align: center; font: 400 14px/1.4 var(--sc-font-text); letter-spacing: 0.04em; color: #D3CAB6; }
+  .lb button { position: absolute; background: none; border: 0; color: var(--ivory); cursor: pointer; font: 300 2.4rem/1 var(--sc-font-display); padding: 10px 14px; }
+  .lb__close { top: 8px; right: 12px; }
+  .lb__prev { left: 6px; top: 50%; transform: translateY(-50%); }
+  .lb__next { right: 6px; top: 50%; transform: translateY(-50%); }
+  .lb button:focus-visible { outline: 2px solid var(--tan); }
+  @media (max-width: 760px) { .lb { padding: 56px 8px 20px; } .lb__prev, .lb__next { top: auto; bottom: 8px; transform: none; } }
+</style>
+</head>
+<body class="t-midday">
+<a class="skip" href="#main">Skip to content</a>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M5 9h14M5 15h14"/></symbol>
+  </defs>
+</svg>
+<header class="cv-bar">
+  <a class="cv-bar__mark" href="index.html">Camotes Village</a>
+  <nav class="cv-bar__links" aria-label="Pages">
+    <a href="cottages.html" aria-current="page">The Cottages</a>
+    <a href="life.html">Life at the Village</a>
+    <a href="for-you.html">Is This Place for You?</a>
+    <a href="rates.html">Long Stays &amp; Rates</a>
+    <a href="explore.html">Explore Camotes</a>
+  </nav>
+  <a class="cv-bar__cta" href="inquire.html">Start an inquiry</a>
+  <details class="cv-bar__menu">
+    <summary aria-label="Menu"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" d="M5 9h14M5 15h14"/></svg></summary>
+    <nav class="cv-bar__panel" aria-label="Pages">
+      <a href="index.html">Home</a>
+    <a href="cottages.html" aria-current="page">The Cottages</a>
+    <a href="life.html">Life at the Village</a>
+    <a href="for-you.html">Is This Place for You?</a>
+    <a href="rates.html">Long Stays &amp; Rates</a>
+    <a href="explore.html">Explore Camotes</a>
+    <a href="inquire.html">Inquire</a>
+    </nav>
+  </details>
+</header>
+<main id="main">
+<section class="head head--photo">
+  <img src="media/web/72-village-aerial-wide.jpg" alt="The whole village from above in late-afternoon light: red-roofed cottages, two with solar panels, around the pool, lawns and winding stone paths, framed by trees" fetchpriority="high" style="object-position: 60% 50%">
+  <p class="head__tag">The village from above</p>
+  <div class="head__grid">
+    <div data-sc-in data-sc-stagger="70">
+      <p class="label">The cottages</p>
+      <h1 class="sc-display">Six houses, <em>each one private.</em></h1>
+    </div>
+    <p class="sc-body" data-sc-in>Six self-contained cottages on a cliffside property by the sea, each with its own kitchen, bathroom and Starlink. Here is what it feels like to stay in each one.</p>
+  </div>
+</section>
+
+<section class="block sc-wrap vmap" aria-labelledby="vmap-h">
+  <div class="vmap__head" data-sc-in>
+    <p class="label">The village map</p>
+    <h2 class="sc-display sc-display--md" id="vmap-h">Find your cottage.</h2>
+  </div>
+  <div class="vmap__board" data-sc-in>
+    <div class="vmap__map">
+      <svg viewBox="0 0 2000 1121" role="group" aria-labelledby="mapTitle">
+        <title id="mapTitle">Map of Camotes Village: six numbered cottages, the pergola, the mini bar and the motorcycle parking around the pool</title>
+        <defs>
+          <pattern id="roof" width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#B9735C"/><path d="M0 0v14" stroke="#A9654F" stroke-width="2"/>
+          </pattern>
+          <pattern id="roofH" width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#B9735C"/><path d="M0 0h14" stroke="#A9654F" stroke-width="2"/>
+          </pattern>
+          <pattern id="roofUpper" width="14" height="14" patternUnits="userSpaceOnUse">
+            <rect width="14" height="14" fill="#8F5A55"/><path d="M0 0v14" stroke="#7F4E4A" stroke-width="2"/>
+          </pattern>
+          <pattern id="solar" width="40" height="34" patternUnits="userSpaceOnUse">
+            <rect width="40" height="34" fill="#2E3D5C"/><rect x="2" y="2" width="36" height="30" fill="#3A4C70"/>
+          </pattern>
+          <pattern id="gravel" width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="#CFC8B9"/><circle cx="3" cy="3" r="1.4" fill="#B5AD9C"/><circle cx="8" cy="7" r="1.2" fill="#BDB5A4"/>
+          </pattern>
+          <filter id="shadow" x="-10%" y="-10%" width="130%" height="130%">
+            <feDropShadow dx="10" dy="12" stdDeviation="8" flood-color="#2C3A22" flood-opacity="0.28"/>
+          </filter>
+        </defs>
+
+                <rect width="2000" height="1121" fill="#C9D5B4"/>
+        <g fill="#B5C59B" opacity="0.9">
+          <circle cx="90" cy="80" r="120"/><circle cx="260" cy="40" r="90"/><circle cx="980" cy="40" r="110"/><circle cx="1160" cy="10" r="90"/>
+          <circle cx="1880" cy="20" r="80"/><circle cx="40" cy="520" r="70"/><circle cx="240" cy="690" r="95"/><circle cx="1960" cy="1000" r="70"/>
+          <circle cx="1400" cy="1110" r="60"/><circle cx="1700" cy="1120" r="60"/>
+        </g>
+        <polygon points="110,438 350,430 560,192 1850,168 1965,560 1965,1052 40,1062 70,620" fill="#E2E8D2"/>
+        <polyline points="110,438 350,430 560,192 1850,168 1965,560 1965,1052 40,1062 70,620 110,438" fill="none" stroke="#CFC6B4" stroke-width="12" stroke-linejoin="round"/>
+
+        <!-- driveway along the top -->
+        <polygon points="660,160 1180,120 1830,50 1895,140 1850,178 1190,196 672,214" fill="#E6DFD1"/>
+
+        <!-- garden paths -->
+        <g fill="none" stroke="#DCD3C2" stroke-width="26" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M660 300 C700 255 760 240 820 236 L1190 222 L1215 205"/>
+          <path d="M650 330 C640 420 630 520 615 620 C600 690 560 730 500 750"/>
+          <path d="M500 752 C600 760 700 770 790 772 C860 774 900 760 950 748 C1010 735 1040 800 1110 790 C1180 780 1220 768 1300 768 C1390 768 1460 760 1520 776 C1560 790 1585 830 1610 880 C1630 910 1640 930 1650 950"/>
+          <path d="M1563 255 C1566 380 1568 480 1560 600 C1556 680 1548 730 1540 772"/>
+          <path d="M925 760 L935 860"/>
+          <path d="M1250 708 L1255 770"/>
+          <path d="M1590 260 L1715 250"/>
+        </g>
+        <g fill="#E6DED0" stroke="#D3C9B6" stroke-width="3">
+          <circle cx="634" cy="425" r="48"/><circle cx="1560" cy="812" r="46"/><circle cx="925" cy="752" r="34"/>
+        </g>
+        <g fill="#8DA36C"><circle cx="634" cy="425" r="20"/><circle cx="1560" cy="812" r="18"/><circle cx="925" cy="752" r="14"/></g>
+        <polygon points="955,782 1060,775 1140,790 1135,850 1000,855 955,835" fill="url(#gravel)"/>
+
+        <!-- pool deck, pool, rock waterfall -->
+        <rect x="780" y="270" width="258" height="342" rx="6" fill="#ECE6DA"/>
+        <rect x="858" y="338" width="176" height="216" rx="4" fill="#5FB2D8"/>
+        <rect x="858" y="338" width="176" height="216" rx="4" fill="none" stroke="#3E95BF" stroke-width="5"/>
+        <path d="M880 272 C905 245 960 240 1000 252 C1040 262 1050 300 1035 336 L885 338 C872 310 872 288 880 272z" fill="#5E625B"/>
+
+        <!-- trees in the garden -->
+        <g fill="#8CA567">
+          <circle cx="720" cy="235" r="34"/><circle cx="870" cy="160" r="60"/><circle cx="150" cy="680" r="70"/><circle cx="1700" cy="670" r="30"/>
+          <circle cx="1715" cy="1000" r="34"/><circle cx="1890" cy="960" r="44"/><circle cx="1210" cy="1040" r="26"/><circle cx="1340" cy="1050" r="34"/>
+        </g>
+
+        <!-- buildings -->
+        <g filter="url(#shadow)">
+          <rect id="b-A" x="372" y="25" width="180" height="115" fill="url(#roof)"/>
+          <path id="b-B" d="M1045 255 H1200 V370 H1195 V660 H1018 V362 H1045z" fill="url(#roofH)"/>
+          <rect id="b-C" x="1215" y="192" width="340" height="206" fill="url(#roof)"/>
+          <rect id="b-D" x="1205" y="505" width="343" height="203" fill="url(#roof)"/>
+          <g id="b-E"><rect x="1715" y="182" width="118" height="118" fill="url(#roof)"/><rect x="1838" y="150" width="162" height="194" fill="url(#roof)"/></g>
+          <path id="b-F" d="M1580 368 H1680 V354 H2000 V552 H1680 V548 H1580z" fill="url(#roof)"/>
+          <polygon id="b-G" points="420,745 722,882 648,1062 305,935" fill="url(#roof)"/>
+          <polygon points="735,975 862,1022 818,1121 692,1080" fill="url(#roof)"/>
+          <path id="b-H" d="M905 858 H1108 V932 H1105 V1121 H880 V932 H905z" fill="url(#roof)"/>
+          <rect id="b-I" x="1455" y="935" width="250" height="172" fill="url(#roof)"/>
+        </g>
+        <g fill="url(#solar)" stroke="#20293D" stroke-width="3">
+          <rect x="1293" y="194" width="160" height="196"/>
+          <rect x="1296" y="525" width="78" height="162"/><rect x="1384" y="525" width="78" height="162"/>
+        </g>
+        <!-- roof ridges -->
+        <g stroke="#D29A83" stroke-width="5" opacity="0.8">
+          <path d="M1385 192 V398"/><path d="M1377 505 V708"/><path d="M1108 255 V660"/><path d="M1840 354 V552"/><path d="M1919 150 V344"/>
+          <path d="M992 932 V1121"/><path d="M1580 935 V1107"/><path d="M372 82 H552"/><path d="M362 840 L685 973"/>
+        </g>
+
+                <g class="vmap__pins" font-family="Jost, sans-serif" font-weight="500" font-size="30" text-anchor="middle">
+          <a class="vmap__pin" data-key="5" data-b="b-I" href="#c-backpacker" aria-label="5: Backpacker's House"><circle cx="1580" cy="1020" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="1580" y="1031" fill="#F4F1E8">5</text></a>
+          <a class="vmap__pin" data-key="6" data-b="b-E" href="#c-eco" aria-label="6: Eco House"><circle cx="1838" cy="247" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="1838" y="258" fill="#F4F1E8">6</text></a>
+          <a class="vmap__pin" data-key="3" data-b="b-C" href="#c-amakan" aria-label="3: Amakan 1"><circle cx="1254" cy="295" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="1254" y="306" fill="#F4F1E8">3</text></a>
+          <a class="vmap__pin" data-key="4" data-b="b-D" href="#c-amakan" aria-label="4: Amakan 2"><circle cx="1250" cy="606" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="1250" y="617" fill="#F4F1E8">4</text></a>
+          <a class="vmap__pin" data-key="1" data-b="b-F" href="#c-2story" aria-label="1: 2 Story House"><circle cx="1760" cy="452" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="1760" y="463" fill="#F4F1E8">1</text></a>
+          <a class="vmap__pin" data-key="2" data-b="b-G" href="#c-gray" aria-label="2: Gray House"><circle cx="512" cy="905" r="32" fill="#4E5B3B" stroke="#FBF9F4" stroke-width="5"/><text x="512" y="916" fill="#F4F1E8">2</text></a>
+          <g class="vmap__pin" data-key="P" data-b="b-B" role="img" aria-label="P: Pergola"><circle cx="1108" cy="470" r="32" fill="#7E7C70" stroke="#FBF9F4" stroke-width="5"/><text x="1108" y="481" fill="#F4F1E8">P</text></g>
+          <g class="vmap__pin" data-key="B" data-b="b-H" role="img" aria-label="B: Mini bar"><circle cx="992" cy="1020" r="32" fill="#7E7C70" stroke="#FBF9F4" stroke-width="5"/><text x="992" y="1031" fill="#F4F1E8">B</text></g>
+          <g class="vmap__pin" data-key="M" data-b="b-A" role="img" aria-label="M: Motorcycle parking"><circle cx="462" cy="82" r="32" fill="#7E7C70" stroke="#FBF9F4" stroke-width="5"/><text x="462" y="93" fill="#F4F1E8">M</text></g>
+        </g>
+
+        <!-- arrow by the left wall: the way to the cliff gazebo -->
+        <g class="vmap__sign" role="img" aria-label="Arrow: this way to the gazebo" font-family="Jost, sans-serif" font-weight="500" text-anchor="middle">
+          <polygon points="22,500 52,472 238,472 238,528 52,528" fill="#8B6A4E"/>
+          <text x="145" y="497" font-size="19" letter-spacing="3" fill="#F4F1E8">THIS WAY TO</text>
+          <text x="145" y="519" font-size="19" letter-spacing="3" fill="#F4F1E8">THE GAZEBO</text>
+        </g>
+
+        <!-- north-ish compass and pool label -->
+        <text x="946" y="452" font-family="Jost, sans-serif" font-size="26" letter-spacing="6" text-anchor="middle" fill="#F4F1E8">POOL</text>
+      </svg>
+    </div>
+    <div class="vmap__side">
+      <ol class="vmap__key">
+        <li data-key="1"><a href="#c-2story"><span class="vmap__n">1</span><span><b>2 Story House</b><small>Sleeps 2 · two floors</small></span></a></li>
+        <li data-key="2"><a href="#c-gray"><span class="vmap__n">2</span><span><b>Gray House</b><small>Sleeps 2</small></span></a></li>
+        <li data-key="3"><a href="#c-amakan"><span class="vmap__n">3</span><span><b>Amakan 1</b><small>Sleeps 2 · solar backup · twin of Amakan 2</small></span></a></li>
+        <li data-key="4"><a href="#c-amakan"><span class="vmap__n">4</span><span><b>Amakan 2</b><small>Sleeps 2 · solar backup · twin of Amakan 1</small></span></a></li>
+        <li data-key="5"><a href="#c-backpacker"><span class="vmap__n">5</span><span><b>Backpacker's House</b><small>Sleeps 1 · loft</small></span></a></li>
+        <li data-key="6"><a href="#c-eco"><span class="vmap__n">6</span><span><b>Eco House</b><small>Sleeps 1</small></span></a></li>
+        <li class="is-other" data-key="P"><div><span class="vmap__n">P</span><span><b>Pergola</b><small>Outdoor dining and working</small></span></div></li>
+        <li class="is-other" data-key="B"><div><span class="vmap__n">B</span><span><b>Mini bar</b><small>On site</small></span></div></li>
+        <li class="is-other" data-key="M"><div><span class="vmap__n">M</span><span><b>Motorcycle parking</b><small>For guests' motorbikes</small></span></div></li>
+        <li class="is-other"><div><span class="vmap__n vmap__n--sign" aria-hidden="true">&larr;</span><span><b>Gazebo</b><small>Follow the arrow to the cliff</small></span></div></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="block sc-wrap ground-linen" aria-label="The six cottages">
+  <div class="list">
+
+    <article class="c c--flow" id="c-2story">
+      <header class="flow__head" data-sc-in data-sc-stagger="60">
+        <p class="label">A look inside</p>
+        <h2 class="sc-display sc-display--md">2 Story House</h2>
+        <p class="scene"><span>Coffee carried up to the balcony, the breeze already there.</span><span>Two floors, so the laptop can stay on one of them.</span><span>A queen bed, cool air and the sound of the breeze to end the day.</span></p>
+        <p class="flow__hint">Tap a photo to see it larger</p>
+      </header>
+      <div class="flow" data-flow>
+        <div class="flow__row" role="group" aria-label="Photos of the 2 Story House">
+          <button class="flow__card" type="button" style="--pos:62% 45%"><img src="media/web/63-2story-exterior.jpg" alt="The 2 Story House in late-afternoon sun: a covered upstairs balcony, coral-stone walls, a small porch with chairs, and a stone path through the lawn" loading="lazy"><span class="flow__cap">Out front</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-porch.jpg" alt="The covered porch in late sun: a rattan chair and side table with two helmets, a palm in a woven basket and the lawn beyond" loading="lazy"><span class="flow__cap">The porch</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-living-sea.jpg" alt="The living room in golden light: a long sofa under a wall of windows, a sliding door open to the lawn and the sea beyond" loading="lazy"><span class="flow__cap">The living room</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-living-sofa.jpg" alt="A dark sofa with orange cushions beneath wide windows looking out to palm trees and blue sky" loading="lazy"><span class="flow__cap">Sofa by the window</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-living-table.jpg" alt="A brass vase of yellow flowers, a coffee press and mugs on a low table in front of the sofa" loading="lazy"><span class="flow__cap">Coffee on the table</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-view-upstairs.jpg" alt="Sheer curtains drawn back from a glass door, looking over the balcony and rooftops to the sea and distant islands" loading="lazy"><span class="flow__cap">View from the second floor</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-kitchen-wide.jpg" alt="The kitchen: wood cabinets with stocked open shelves, a microwave, a fridge, marble-look backsplash and a granite island" loading="lazy"><span class="flow__cap">The kitchen</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-kitchen-window.jpg" alt="Late sun across the kitchen: a sink under a wide window, yellow flowers, a basket of fruit on the granite island" loading="lazy"><span class="flow__cap">Sun on the counter</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-kitchen-cook.jpg" alt="A granite counter set with a pan on an induction cooker, a rice cooker, stacked plates and fresh ingredients" loading="lazy"><span class="flow__cap">Ready to cook</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-kitchen-night.jpg" alt="The kitchen and island by evening light, with two pendant lamps, a cove-lit ceiling and a water dispenser" loading="lazy"><span class="flow__cap">The kitchen at night</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bed-front.jpg" alt="A queen bed with towels folded into two swans, orange cushions, a sunset painting above and a window on each side" loading="lazy"><span class="flow__cap">The bed</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bed-window.jpg" alt="The upstairs bed beside a bright window with sheer curtains, a sunset painting on the wall" loading="lazy"><span class="flow__cap">By the window</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bed-swans.jpg" alt="Close to the bed: towel swans forming a heart against orange cushions, a sunset painting above" loading="lazy"><span class="flow__cap">A warm welcome</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bed-evening.jpg" alt="The bedroom in low evening light, with a sliding barn door, bedside lamps and a sunset painting" loading="lazy"><span class="flow__cap">Evening light</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-desk.jpg" alt="A dark desk with a laptop, coffee, a plate of pastries and a potted succulent in warm light" loading="lazy"><span class="flow__cap">A desk for the day</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bath-upstairs.jpg" alt="A bathroom with marble-look walls, a small window, a pedestal sink, candles and a wooden barn door" loading="lazy"><span class="flow__cap">The upstairs bathroom</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bath-flowers.jpg" alt="Orange flowers in a pot on the toilet tank, a glass-block window and a floral curtain behind" loading="lazy"><span class="flow__cap">Small touches</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bath-candles.jpg" alt="A floral shower curtain drawn back from a marble-look shower with candles in the wall niche" loading="lazy"><span class="flow__cap">Candles and marble</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/2s-bath-ground.jpg" alt="A sunlit bathroom with a wall-hung sink, a reed diffuser, fresh flowers and a small stool" loading="lazy"><span class="flow__cap">The downstairs bathroom</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 8%"><img src="media/web/2s-shower-wall.jpg" alt="A rain shower head and water heater on a wall of swirling marble-look tiles beside a glass-block window" loading="lazy"><span class="flow__cap">The rain shower</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 8%"><img src="media/web/2s-shower-up.jpg" alt="Looking up at the rain shower, hand shower and water heater against marble-look tiles" loading="lazy"><span class="flow__cap">Hot water, marble walls</span></button>
+        </div>
+      </div>
+      <dl class="flow__facts" data-sc-in>
+        <dt>Sleeps</dt><dd>2 · more guests? <a href="inquire.html">Ask us</a></dd>
+        <dt>Layout</dt><dd>Two floors</dd>
+        <dt>Bed</dt><dd>Queen</dd>
+        <dt>Internet</dt><dd>Starlink, reliable for work and video calls</dd>
+      </dl>
+    </article>
+
+    <article class="c c--flow" id="c-gray">
+      <header class="flow__head" data-sc-in data-sc-stagger="60">
+        <p class="label">A look inside</p>
+        <h2 class="sc-display sc-display--md">Gray House</h2>
+        <p class="scene"><span>The sea in the window before you have found your sandals.</span><span>Dinner from your own kitchen, the door left open to the breeze.</span><span>A queen bed, the air-con on low, the afternoon slipping by.</span></p>
+      </header>
+      <!-- logo stands in until the Gray House photos arrive; swap for a .flow gallery then -->
+      <figure class="gray-mark" data-sc-in role="img" aria-label="Camotes Village logo: a palm, the sun and the sea. Photos of the Gray House are coming soon.">
+        <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" fill="none">
+          <defs>
+            <mask id="sun-cutout-mono">
+              <rect width="400" height="400" fill="white" />
+              <g stroke="black" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="black">
+                <path d="M148 118 C182 88, 232 95, 256 128 C222 114, 185 114, 148 118 Z" />
+                <path d="M148 118 C192 122, 222 155, 222 198 C202 166, 178 142, 148 118 Z" />
+              </g>
+            </mask>
+          </defs>
+          <g fill="currentColor">
+            <path mask="url(#sun-cutout-mono)" d="M198 232 C175 182, 192 115, 245 92 C298 70, 355 102, 362 160 C366 186, 360 208, 350 222 C302 204, 245 208, 198 232 Z" />
+            <path d="M146 120 C125 162, 114 212, 116 254 C117 260, 142 260, 144 253 C136 212, 140 165, 152 124 Z" />
+            <path d="M148 118 C134 78, 102 52, 78 55 C98 66, 112 82, 118 96 L108 93 L116 105 C128 110, 138 114, 148 118 Z" />
+            <path d="M148 118 C156 76, 184 48, 210 50 C192 62, 180 78, 174 92 L185 88 L176 101 C166 107, 156 113, 148 118 Z" />
+            <path d="M146 118 C104 102, 62 112, 44 136 C66 126, 88 124, 106 126 L94 134 L112 133 C124 128, 136 122, 146 118 Z" />
+            <path d="M148 118 C184 88, 232 94, 256 128 C234 116, 212 112, 192 113 L204 122 L185 119 C172 118, 160 118, 148 118 Z" />
+            <path d="M146 120 C104 134, 78 164, 76 192 C92 174, 108 160, 122 152 L114 164 L128 155 C135 144, 141 132, 146 120 Z" />
+            <path d="M148 122 C134 152, 136 184, 152 204 C156 184, 158 166, 157 150 L164 160 L162 144 C158 136, 153 128, 148 122 Z" />
+            <path d="M148 118 C192 122, 222 155, 222 198 C206 176, 192 158, 178 146 L186 160 L172 148 C163 138, 155 128, 148 118 Z" />
+            <path d="M82 256 C142 276, 195 256, 248 236 C288 220, 328 224, 362 246 C366 249, 362 256, 355 255 C322 244, 286 244, 248 258 C194 278, 138 294, 80 264 C75 261, 77 254, 82 256 Z" />
+            <path d="M106 302 C160 318, 206 298, 254 280 C288 267, 322 268, 348 282 C352 284, 349 294, 342 296 C316 290, 286 292, 254 304 C206 322, 156 336, 104 310 C99 307, 101 300, 106 302 Z" />
+            <path d="M152 342 C194 352, 232 338, 268 324 C290 315, 310 314, 324 318 C328 319, 324 328, 316 334 C272 364, 204 374, 150 348 C146 346, 148 341, 152 342 Z" />
+          </g>
+        </svg>
+        <figcaption>Photos coming soon</figcaption>
+      </figure>
+      <dl class="flow__facts" data-sc-in>
+        <dt>Sleeps</dt><dd>2 · more guests? <a href="inquire.html">Ask us</a></dd>
+        <dt>Bed</dt><dd>Queen</dd>
+        <dt>Internet</dt><dd>Starlink, reliable for work and video calls</dd>
+      </dl>
+    </article>
+
+    <article class="c c--flow" id="c-amakan">
+      <header class="flow__head" data-sc-in data-sc-stagger="60">
+        <p class="label">A look inside</p>
+        <h2 class="sc-display sc-display--md">Amakan 1 <em>&amp; 2</em></h2>
+        <p class="scene"><span>Slide the door open, let in the sea and the breeze.</span><span>Work by the window, unhurried, at ease.</span><span>Lamp on low, a queen bed made for two, and a windchime singing the evening through.</span></p>
+        <p class="flow__hint">Tap a photo to see it larger</p>
+      </header>
+      <div class="flow" data-flow>
+        <div class="flow__row" role="group" aria-label="Photos of Amakan 2, the twin of Amakan 1">
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/am-side-profile.jpg" alt="Amakan from the lawn: woven-panel walls, a long sloping roof and a covered porch, with the 2 Story House beside it" loading="lazy"><span class="flow__cap">Out front</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/am-porch.jpg" alt="The covered porch with two wooden chairs before glass sliding doors, palms in woven baskets either side" loading="lazy"><span class="flow__cap">The porch</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/am-porch-garden.jpg" alt="Amakan from the corner: the porch, the woven-panel walls and the lawn and stone paths around it" loading="lazy"><span class="flow__cap">Porch and garden</span></button>
+          <button class="flow__card" type="button" style="--pos:45% 55%"><img src="media/web/78-amakan-work-from-bed-crop.jpg" alt="Working from bed at dusk: a laptop on a guest's lap, the sliding door open to the pergola, the garden and the sea" loading="lazy"><span class="flow__cap">Work with a view</span></button>
+          <button class="flow__card" type="button" style="--pos:40% 60%"><img src="media/web/79-amakan-bed-lamp.jpg" alt="The queen bed seen from the bedside: a rattan lamp glowing on a granite nightstand, orange and sage cushions, a fisherman painting on the green wall and fresh towels at the foot of the bed" loading="lazy"><span class="flow__cap">The bed</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/77-amakan-bedside.jpg" alt="The bedside: a rattan lamp glowing beside a plant in a glass jar, the queen bed with orange and sage cushions, a fisherman painting above" loading="lazy"><span class="flow__cap">Lamp on low</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 60%"><img src="media/web/73-amakan-desk.jpg" alt="A green painted table and two chairs by a curtained window, a laptop, a reed diffuser and a vase of greenery" loading="lazy"><span class="flow__cap">A desk by the window</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/74-amakan-desk-tv.jpg" alt="The room in afternoon light: the desk with a laptop by the window, a wall-mounted TV over a chest of drawers, fresh towels on the bed" loading="lazy"><span class="flow__cap">Slow afternoons</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/92-amakan-kitchen-galley.jpg" alt="The galley kitchen in morning sun: cream cabinets on both sides, granite counters, a sink by the window, a fridge with a microwave on top" loading="lazy"><span class="flow__cap">The kitchen</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 60%"><img src="media/web/89-amakan-kitchen-cabinets.jpg" alt="Cream cabinets above and below a granite counter with a marble-look backsplash, stacked green-rimmed bowls and plates, a woven basket and plants" loading="lazy"><span class="flow__cap">Cabinets and counter</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/90-amakan-kitchen-drawers.jpg" alt="Drawers open to show cutlery and kitchen tools, bowls and a paper towel stand on the granite counter, the garden through the open door" loading="lazy"><span class="flow__cap">Everything in its drawer</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 60%"><img src="media/web/91-amakan-kitchen-pots.jpg" alt="A cabinet shelf with a stockpot, a saucepan, frying pans and a colander" loading="lazy"><span class="flow__cap">Pots and pans</span></button>
+          <button class="flow__card" type="button" style="--pos:45% 55%"><img src="media/web/75-amakan-bath-sink.jpg" alt="The bathroom by lamplight: marble-look tiles, a pedestal sink with fresh flowers, a rattan lamp under a leaf-print curtain" loading="lazy"><span class="flow__cap">The bathroom</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 30%"><img src="media/web/80-amakan-bath-wide.jpg" alt="The full bathroom in warm light: marble-look walls, a toilet beside the rattan lamp, and a walk-in shower with a hot-water heater behind a cream curtain" loading="lazy"><span class="flow__cap">Shower and toilet</span></button>
+          <button class="flow__card" type="button" style="--pos:55% 50%"><img src="media/web/76-amakan-bath-glass.jpg" alt="The bathroom in warm light: a pedestal sink, a glowing woven lantern and a wall of glass blocks" loading="lazy"><span class="flow__cap">Warm light, glass blocks</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/88-amakan-room-sea.jpg" alt="The bright, green-walled room: a queen bed with a floral cover and fresh towels, the fisherman painting above, and the sliding door open to the terrace and the blue sea" loading="lazy"><span class="flow__cap">Out to the sea</span></button>
+        </div>
+      </div>
+      <dl class="flow__facts" data-sc-in>
+        <dt>Cottages</dt><dd>Two, identical: Amakan 1 and Amakan 2</dd>
+        <dt>Sleeps</dt><dd>2 in each · more guests? <a href="inquire.html">Ask us</a></dd>
+        <dt>Bed</dt><dd>Queen</dd>
+        <dt>Kitchen</dt><dd>Its own, with a fridge, microwave, sink, cookware, dishes and cutlery</dd>
+        <dt>Bathroom</dt><dd>Its own, with a hot-water shower</dd>
+        <dt>Workspace</dt><dd>A table by the window, made for a laptop</dd>
+        <dt>Power</dt><dd>Mains electricity, with solar backup</dd>
+        <dt>Internet</dt><dd>Starlink, reliable for work and video calls</dd>
+      </dl>
+    </article>
+
+    <article class="c c--flow" id="c-backpacker">
+      <header class="flow__head" data-sc-in data-sc-stagger="60">
+        <p class="label">A look inside</p>
+        <h2 class="sc-display sc-display--md">Backpacker's House</h2>
+        <p class="scene"><span>The rattan lamp clicks on and the laptop opens at its own desk.</span><span>Rice on the induction cooker in the open-air kitchen, birds in the trees.</span><span>A warm rain shower, then up the ladder to the loft.</span></p>
+        <p class="flow__hint">Tap a photo to see it larger</p>
+      </header>
+      <div class="flow" data-flow>
+        <div class="flow__row" role="group" aria-label="Photos of the Backpacker's House">
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/83-bp-room-wide.jpg" alt="The room in warm afternoon light: a desk and rattan lamp by the window, a folding wooden chair on a red rug, the daybed below the sleeping loft" loading="lazy"><span class="flow__cap">The room</span></button>
+          <button class="flow__card" type="button" style="--pos:45% 55%"><img src="media/web/86-bp-desk-day.jpg" alt="The desk by day: a glowing rattan lamp, a laptop, a book and notebooks, a plant in a terracotta pot, the garden through the window" loading="lazy"><span class="flow__cap">The desk</span></button>
+          <button class="flow__card" type="button" style="--pos:40% 50%"><img src="media/web/85-bp-loft.jpg" alt="Up in the sleeping loft: a red blanket, floral pillows, a laptop, a remote and a small TV" loading="lazy"><span class="flow__cap">The loft</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/bp-porch-desk.jpg" alt="The Backpacker's porch: a wooden chair and a laptop on a small stool, two wooden doors, coral-stone panels and potted plants" loading="lazy"><span class="flow__cap">The porch</span></button>
+          <button class="flow__card" type="button" style="--pos:40% 55%"><img src="media/web/94-bp-kitchen-counter.jpg" alt="The open-air kitchen counter: a pan on the induction cooker, onions and garlic on a bamboo board, stacked bowls, white flowers and trailing plants against the trees" loading="lazy"><span class="flow__cap">The kitchen</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 55%"><img src="media/web/95-bp-kitchen-cook.jpg" alt="Close up: a steel pan with a wooden spoon on the induction cooker, potatoes, onions, garlic and spices on a bamboo board" loading="lazy"><span class="flow__cap">Ready to cook</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/96-bp-kitchen-tools.jpg" alt="An open drawer of kitchen tools: a spatula, a whisk, scissors, a citrus press, measuring cups and spoons, and cutlery" loading="lazy"><span class="flow__cap">Kitchen tools</span></button>
+          <button class="flow__card" type="button" style="--pos:35% 55%"><img src="media/web/93-bp-kitchen-wide.jpg" alt="The whole open-air kitchen: a granite counter with sink, induction cooker, rice cooker and dishes, woven baskets below and trees all around" loading="lazy"><span class="flow__cap">Open to the trees</span></button>
+          <button class="flow__card" type="button" style="--pos:40% 50%"><img src="media/web/58-backpacker-bathroom.jpg" alt="The bathroom by lamplight: a pedestal sink, a blue-marble wall and glass-block window" loading="lazy"><span class="flow__cap">The bathroom</span></button>
+          <button class="flow__card" type="button" style="--pos:55% 55%"><img src="media/web/82-bp-sink-greenery.jpg" alt="The washbasin with fresh flowers and trailing plants, a mirror above and a rattan lamp glowing beside it" loading="lazy"><span class="flow__cap">Sink and greenery</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/bp-bath-shower-door.jpg" alt="The bathroom in warm light: a marble-look shower behind a white curtain, a wooden stool with a reed diffuser, a plant in a woven basket and the wooden door open to the lawn" loading="lazy"><span class="flow__cap">Shower and garden door</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/bp-bath-corner.jpg" alt="A wooden stool with a reed diffuser and a woven box, a leafy plant in a basket and a small window with a hanging plant beside the wooden door" loading="lazy"><span class="flow__cap">A corner of green</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/bp-bath-toilet.jpg" alt="The comfort room: a wooden stool, a toilet with a plant on the tank, a standing paper holder and a woven bin beside the shower" loading="lazy"><span class="flow__cap">The comfort room</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/bp-bath-toilet-close.jpg" alt="Close to the toilet: a reed diffuser and spare roll on a wooden stool, a trailing plant on the tank, a glass-block window behind" loading="lazy"><span class="flow__cap">Small touches</span></button>
+          <button class="flow__card" type="button" style="--pos:45% 50%"><img src="media/web/84-bp-desk-night.jpg" alt="The desk at night: the rattan lamp glowing beside a laptop, a reed diffuser and a potted plant against the curtain" loading="lazy"><span class="flow__cap">Desk by lamplight</span></button>
+          <button class="flow__card" type="button" style="--pos:55% 55%"><img src="media/web/87-bp-daybed-corner.jpg" alt="The daybed corner: patterned cushions, a laptop on the daybed, shelves with lanterns and flowers, a painted step stool to the loft" loading="lazy"><span class="flow__cap">Daybed corner</span></button>
+        </div>
+      </div>
+      <dl class="flow__facts" data-sc-in>
+        <dt>Sleeps</dt><dd>1 · bringing someone? <a href="inquire.html">Ask us</a></dd>
+        <dt>Layout</dt><dd>A sleeping loft above a daybed, with a desk by the window</dd>
+        <dt>Bed</dt><dd>Loft</dd>
+        <dt>Bathroom</dt><dd>Its own, with a walk-in rain shower and a blue-marble wall</dd>
+        <dt>Kitchen</dt><dd>Open-air, with an induction cooker, rice cooker, fridge, microwave, kettle, cookware and utensils</dd>
+        <dt>Internet</dt><dd>Starlink, reliable for work and video calls</dd>
+      </dl>
+    </article>
+
+    <article class="c c--flow" id="c-eco">
+      <header class="flow__head" data-sc-in data-sc-stagger="60">
+        <p class="label">A look inside</p>
+        <h2 class="sc-display sc-display--md">Eco House</h2>
+        <p class="scene"><span>A house for one, and all the quiet that comes with it.</span><span>Coffee for one, the sea for company.</span><span>Starlink for the work, the breeze for the rest.</span></p>
+        <p class="flow__hint">Tap a photo to see it larger</p>
+      </header>
+      <div class="flow" data-flow>
+        <div class="flow__row" role="group" aria-label="Photos of the Eco House">
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-kitchen.jpg" alt="The kitchenette: a wooden door, open shelves with dishes, a granite counter with an induction cooker, a window with a striped blind, a fridge with a microwave and kettle on top" loading="lazy"><span class="flow__cap">The kitchen</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-kitchen-window.jpg" alt="Sun on the granite counter: a pan on the cooker, potatoes, onion and garlic on a board, flowers and a basket on the window sill" loading="lazy"><span class="flow__cap">Sun on the counter</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-shelves.jpg" alt="Wooden shelves stocked with plates, bowls, glasses and oils beside the window and counter" loading="lazy"><span class="flow__cap">Plates, bowls and glasses</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-drawers.jpg" alt="Drawers pulled open under the counter: measuring cups and whisks, cutlery in a tray, scissors and kitchen tools" loading="lazy"><span class="flow__cap">Everything to cook with</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-drawers-side.jpg" alt="The counter from the side with drawers open, the fridge and microwave beyond and the door open to the garden" loading="lazy"><span class="flow__cap">Drawers full of tools</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-coffee.jpg" alt="Two patterned mugs on a woven tray with coffee and tea sachets, a rug coaster and yellow flowers" loading="lazy"><span class="flow__cap">Coffee and tea</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-daybed.jpg" alt="A daybed piled with knit cushions under a window with an orange blind, air-con above and a TV on the wall" loading="lazy"><span class="flow__cap">The lounge</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-daybed-close.jpg" alt="Knit cushions and a soft throw on the daybed, yellow flowers in a clay vase, Netflix on the TV" loading="lazy"><span class="flow__cap">A film on the daybed</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-bath.jpg" alt="The bathroom: a wooden vanity with a gold mirror, a glass-block window, a reed diffuser, plants and a softly lit toilet" loading="lazy"><span class="flow__cap">The bathroom</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-bath-sink.jpg" alt="A floral shower curtain beside a granite sink, a glass-block window glowing warm and a gold-framed mirror" loading="lazy"><span class="flow__cap">Sink and shower</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 50%"><img src="media/web/eco-bath-view.jpg" alt="A glass-block window, the toilet beyond a doorway and a green-leaf shower curtain" loading="lazy"><span class="flow__cap">Glass blocks and green leaves</span></button>
+          <button class="flow__card" type="button" style="--pos:50% 25%"><img src="media/web/eco-shower.jpg" alt="A brushed-steel shower head on a sliding rail against marble-look tiles beside a glass-block window" loading="lazy"><span class="flow__cap">The shower</span></button>
+        </div>
+      </div>
+      <dl class="flow__facts" data-sc-in>
+        <dt>Sleeps</dt><dd>1 · bringing someone? <a href="inquire.html">Ask us</a></dd>
+        <dt>Bed</dt><dd>Single</dd>
+        <dt>Kitchen</dt><dd>Induction cooker, fridge, microwave and kettle</dd>
+        <dt>Internet</dt><dd>Starlink, reliable for work and video calls</dd>
+      </dl>
+    </article>
+
+  </div>
+</section>
+
+<section class="block sc-wrap">
+  <div class="split">
+    <div data-sc-in>
+      <p class="label">Every cottage includes</p>
+    </div>
+    <ul class="lines includes" data-sc-in data-sc-stagger="40">
+      <li>Its own bathroom and shower</li>
+      <li>A kitchen and a refrigerator</li>
+      <li>Air-con</li>
+      <li>A TV</li>
+      <li>Starlink internet</li>
+      <li>Solar backup in Amakan 1 and Amakan 2</li>
+      <li>Linens and towels on short stays</li>
+    </ul>
+  </div>
+</section>
+
+<section class="block sc-wrap">
+  <div class="split">
+    <div data-sc-in>
+      <p class="label">Coming with more people?</p>
+    </div>
+    <div class="sc-stack" data-sc-in data-sc-stagger="60">
+      <p class="statement">Just ask. We will see what we can arrange.</p>
+      <p class="sc-body">The 2 Story House, Gray House, Amakan 1 and Amakan 2 each sleep two in a queen bed. The Eco House and the Backpacker's House are made for one. If you are planning to bring more people, <a href="inquire.html">tell us in your inquiry</a>.</p>
+    </div>
+  </div>
+</section>
+</main>
+<section class="band sc-wrap" aria-labelledby="band-h">
+  <div class="band__panel" data-sc-in>
+    <h2 class="sc-display" id="band-h">Found one you like?</h2>
+    <p>Tell us your dates and who's coming.</p>
+    <div class="band__actions">
+      <a class="btn" href="inquire.html">Start an inquiry</a>
+      <a class="textlink" href="rates.html">Long stays &amp; rates</a>
+    </div>
+  </div>
+</section>
+<footer class="foot sc-wrap">
+  <span>Camotes Village · Poro, Camotes Islands, Cebu, Philippines</span>
+  <span><a href="mailto:camotesvillage@gmail.com">camotesvillage@gmail.com</a> · <a href="https://wa.me/639277667788">WhatsApp +63 927 766 7788</a> · <a href="https://maps.app.goo.gl/2XbyZts8r2YNd3Pr9" target="_blank" rel="noopener">Poro, Cebu</a> · <a href="https://www.facebook.com/profile.php?id=61580286550292" target="_blank" rel="noopener">Facebook</a> · <a href="https://www.instagram.com/camotesvillage/" target="_blank" rel="noopener">Instagram</a></span>
+</footer>
+<script src="scrollcraft.js"></script>
+<script>ScrollCraft.mount(document.body);</script>
+<script src="bar.js" defer></script>
+<script src="parallax.js" defer></script>
+<script>
+/* gallery viewer: tap a photo to see it large; arrows, swipe or the keyboard move
+   through that cottage's photos, and Escape or the backdrop closes it */
+(function () {
+  var lb = document.createElement('div');
+  lb.className = 'lb'; lb.hidden = true;
+  lb.setAttribute('role', 'dialog'); lb.setAttribute('aria-modal', 'true'); lb.setAttribute('aria-label', 'Photo viewer');
+  lb.innerHTML = '<img alt=""><p class="lb__cap"></p>' +
+    '<button class="lb__close" type="button" aria-label="Close">&times;</button>' +
+    '<button class="lb__prev" type="button" aria-label="Previous photo">&lsaquo;</button>' +
+    '<button class="lb__next" type="button" aria-label="Next photo">&rsaquo;</button>';
+  document.body.appendChild(lb);
+  var img = lb.querySelector('img'), cap = lb.querySelector('.lb__cap');
+  var cards = [], at = 0, opener = null;
+  function show(i) {
+    at = (i + cards.length) % cards.length;
+    var c = cards[at], src = c.querySelector('img');
+    img.src = src.currentSrc || src.src; img.alt = src.alt;
+    cap.textContent = c.querySelector('.flow__cap').textContent + '  ·  ' + (at + 1) + ' / ' + cards.length;
+  }
+  function open(list, i, from) {
+    cards = list; opener = from; show(i);
+    lb.hidden = false; document.documentElement.style.overflow = 'hidden';
+    lb.querySelector('.lb__close').focus();
+  }
+  function close() {
+    lb.hidden = true; document.documentElement.style.overflow = '';
+    if (opener) opener.focus();
+  }
+  document.querySelectorAll('[data-flow]').forEach(function (flow) {
+    var list = [].slice.call(flow.querySelectorAll('.flow__card'));
+    list.forEach(function (c, i) { c.addEventListener('click', function () { open(list, i, c); }); });
+  });
+  lb.querySelector('.lb__close').addEventListener('click', close);
+  lb.querySelector('.lb__prev').addEventListener('click', function () { show(at - 1); });
+  lb.querySelector('.lb__next').addEventListener('click', function () { show(at + 1); });
+  lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+  document.addEventListener('keydown', function (e) {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') close();
+    else if (e.key === 'ArrowRight') show(at + 1);
+    else if (e.key === 'ArrowLeft') show(at - 1);
+  });
+  var x0 = null;
+  lb.addEventListener('pointerdown', function (e) { if (e.pointerType !== 'mouse') x0 = e.clientX; });
+  lb.addEventListener('pointerup', function (e) {
+    if (x0 === null) return;
+    var dx = e.clientX - x0; x0 = null;
+    if (Math.abs(dx) > 40) show(at + (dx < 0 ? 1 : -1));
+  });
+})();
+</script>
+<script>
+/* village map: hovering a key entry or a marker lights up that building */
+(function () {
+  var map = document.querySelector('.vmap'); if (!map) return;
+  function set(key, on) {
+    map.querySelectorAll('[data-key="' + key + '"]').forEach(function (el) {
+      el.classList.toggle('is-on', on);
+      if (el.dataset.b) { var b = document.getElementById(el.dataset.b); if (b) b.classList.toggle('is-lit', on); }
+    });
+  }
+  map.querySelectorAll('[data-key]').forEach(function (el) {
+    var k = el.dataset.key;
+    ['mouseenter', 'focusin'].forEach(function (t) { el.addEventListener(t, function () { set(k, true); }); });
+    ['mouseleave', 'focusout'].forEach(function (t) { el.addEventListener(t, function () { set(k, false); }); });
+  });
+})();
+</script>
+</body>
+</html>
